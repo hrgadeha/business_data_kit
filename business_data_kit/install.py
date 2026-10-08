@@ -31,22 +31,58 @@ def create_demo_data():
 		create_stock_entries(company)
 		frappe.db.commit()
 	except Exception:
-		frappe.db.rollback(save_point=SAVEPOINT)
+		# A nested insert (e.g. chart of accounts import during company
+		# creation) may have already issued its own commit, in which case
+		# our savepoint no longer exists and rolling back to it would
+		# itself raise. Fall back to a plain rollback in that case.
+		try:
+			frappe.db.rollback(save_point=SAVEPOINT)
+		except Exception:
+			frappe.db.rollback()
 		frappe.log_error(title="Business Data Kit: demo data generation failed")
 		print("Business Data Kit: demo data generation failed, see Error Log for details")
 	finally:
 		frappe.flags.in_import = False
 
 
+def _ensure_tree_node(doctype, name_field, parent_field, root_name, leaf_name=None, leaf_is_group=0):
+	"""Ensure a root node (and optionally a leaf under it) exists for a
+	tree doctype (Item Group, Territory, Customer Group, Supplier Group).
+	Self-contained instead of depending on erpnext's Setup Wizard having
+	run, since bench install-app erpnext does not run it, and a site that
+	did run it may have used a different country/leaf than ours."""
+	if not frappe.db.exists(doctype, root_name):
+		frappe.get_doc(
+			{"doctype": doctype, name_field: root_name, parent_field: "", "is_group": 1}
+		).insert()
+
+	if leaf_name and not frappe.db.exists(doctype, leaf_name):
+		frappe.get_doc(
+			{
+				"doctype": doctype,
+				name_field: leaf_name,
+				parent_field: root_name,
+				"is_group": leaf_is_group,
+			}
+		).insert()
+
+
 def create_company():
 	# bench install-app erpnext does not run the Setup Wizard, so the
 	# baseline fixtures it normally creates (root Item/Customer/Supplier
-	# Groups, Territories, default Price Lists, UOMs, etc.) don't exist
-	# yet. Install them the same way the Setup Wizard does.
-	if not frappe.db.exists("Item Group", "All Item Groups"):
-		from erpnext.setup.setup_wizard.operations.install_fixtures import install as install_fixtures
-
-		install_fixtures(country=demo_data.COMPANY["country"])
+	# Groups, Territories, default Price Lists, UOMs, etc.) may not exist.
+	# Ensure exactly what we need ourselves rather than depending on
+	# erpnext's install_fixtures(), which assumes a from-scratch site.
+	_ensure_tree_node("Item Group", "item_group_name", "parent_item_group", "All Item Groups")
+	_ensure_tree_node(
+		"Territory", "territory_name", "parent_territory", "All Territories", demo_data.COMPANY["country"]
+	)
+	_ensure_tree_node(
+		"Customer Group", "customer_group_name", "parent_customer_group", "All Customer Groups", "Commercial"
+	)
+	_ensure_tree_node(
+		"Supplier Group", "supplier_group_name", "parent_supplier_group", "All Supplier Groups", "Hardware"
+	)
 
 	for price_list, buying, selling in (
 		("Standard Buying", 1, 0),
