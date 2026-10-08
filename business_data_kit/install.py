@@ -119,6 +119,15 @@ def create_company():
 		}
 	)
 	company.insert()
+
+	# The Singapore CoA template's income ledger is named "Sales Income"
+	# rather than "Sales"/"Sales Account", so ERPNext's auto-detection in
+	# Company.set_default_accounts() doesn't find it and leaves
+	# default_income_account empty, which then fails Sales Invoice
+	# validation. Set it explicitly.
+	if not company.default_income_account:
+		company.db_set("default_income_account", _account("Sales Income"))
+
 	return company.name
 
 
@@ -243,6 +252,10 @@ def _item_lookup():
 
 
 def _warehouse(name):
+	return f"{name} - {demo_data.COMPANY['abbr']}"
+
+
+def _account(name):
 	return f"{name} - {demo_data.COMPANY['abbr']}"
 
 
