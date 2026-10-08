@@ -5,9 +5,10 @@
 COMPANY = {
 	"company_name": "Bright Hardware Traders",
 	"abbr": "BHT",
-	"default_currency": "INR",
-	"country": "India",
-	"chart_of_accounts": "Standard",
+	"default_currency": "SGD",
+	"country": "Singapore",
+	"create_chart_of_accounts_based_on": "Standard Template",
+	"chart_of_accounts": "Singapore - Chart of Accounts",
 	"valuation_method": "Moving Average",
 }
 

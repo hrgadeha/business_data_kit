@@ -113,6 +113,7 @@ def create_company():
 			"abbr": demo_data.COMPANY["abbr"],
 			"default_currency": demo_data.COMPANY["default_currency"],
 			"country": demo_data.COMPANY["country"],
+			"create_chart_of_accounts_based_on": demo_data.COMPANY["create_chart_of_accounts_based_on"],
 			"chart_of_accounts": demo_data.COMPANY["chart_of_accounts"],
 			"valuation_method": demo_data.COMPANY["valuation_method"],
 		}
