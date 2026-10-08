@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["erpnext"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -85,8 +85,7 @@ app_license = "mit"
 # Installation
 # ------------
 
-# before_install = "business_data_kit.install.before_install"
-# after_install = "business_data_kit.install.after_install"
+after_install = "business_data_kit.install.after_install"
 
 # Uninstallation
 # ------------
